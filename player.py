@@ -1,10 +1,14 @@
 from random import random, choice
 from stats import complex_hash
 from matplotlib import pyplot as plt
-from utils import log 
+from utils import log
+import torch
+from torch import nn
+import numpy as np
+from copy import deepcopy
 
 class Bot:
-    def __init__(n, m):
+    def __init__(self, n, m):
         self.history = []
         self.random_rate = 0.1
         self.discount_rate = 0.9
@@ -14,7 +18,7 @@ class Bot:
             nn.Linear(n * m, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
-        self.opt = torch.optim.Adam(model.parameters(), lr=1e-1)
+        self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1)
 
     def smart_select(self, board):
         def estimate(move):
@@ -33,7 +37,7 @@ class Bot:
         self.opt.zero_grad()
         def lf(x, y):
             return (x-y)**2
-        
+
         print('---------------', file=log)
         for e in self.history:
             print(f'win: {self.model(e.to_tensor())}', file=log)

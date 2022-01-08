@@ -1,17 +1,12 @@
-import torch
-import numpy as np
-from torch import nn
-from copy import deepcopy
 from board import Turn, Board
 from player import Bot, Human
-from routines import tournament, training_camp
-from time import time 
+from routines import tournament, training_camp 
 from utils import git_save
 
 n = 5
 
-newbie = Player(n, n)
-player = Player(n, n)
+newbie = Bot(n, n)
+player = Bot(n, n)
 train = 10
 
 for i in range(10**9):

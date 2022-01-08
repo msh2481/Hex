@@ -1,3 +1,5 @@
+from time import time
+
 def git_save():
     from os import system as cmd
     print(cmd('git switch autosave'))
