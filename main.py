@@ -11,7 +11,7 @@ train = 10
 
 for i in range(10**9):
     git_save()
-    print(f'i: {i}, train: {train}, win: {tournament(player, newbie, train)}', flush=True)
+    print(f'i: {i}, train: {train}, win: {tournament(n, player, newbie, train)}', flush=True)
     torch.save(player.model.state_dict(), f'zoo/{i}.pt')
     player.plot_success_story(f'plt/{i}.pdf')
     player = training_camp(player, train)
