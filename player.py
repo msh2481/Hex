@@ -22,9 +22,11 @@ class Bot:
         self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1)
 
     def estimate_first(self, board):
+        assert type(board) is Board
         return float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
 
     def smart_select(self, board):
+        assert type(board) is Board
         def estimate(move):
             board.put(move)
             result = self.estimate_first(board)
