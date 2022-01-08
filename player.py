@@ -54,7 +54,7 @@ class Bot:
         mse = 0
         for i in range(len(self.history) - 1):
             w = self.discount_rate ** (len(self.history) - 1 - i)
-            mse += w * lf(self.estimate_first(self.history[i].to_tensor()), self.estimate_first(self.history[-1].to_tensor()))
+            mse += w * lf(self.estimate_first(self.history[i]), self.estimate_first(self.history[-1]))
         mse.backward()
         self.opt.step()
         self.success_story.append(complex_hash(self.model, 2))
