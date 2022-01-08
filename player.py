@@ -1,9 +1,15 @@
 from random import random, choice
 from stats import complex_hash
 from matplotlib import pyplot as plt
+from utils import log
+import torch
+from torch import nn
+import numpy as np
+from copy import deepcopy
+from board import Board 
 
 class Bot:
-    def __init__(n, m):
+    def __init__(self, n, m):
         self.history = []
         self.random_rate = 0.1
         self.discount_rate = 0.9
@@ -13,13 +19,17 @@ class Bot:
             nn.Linear(n * m, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
-        self.opt = torch.optim.Adam(model.parameters(), lr=1e-1)
+        self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1)
+
+    def estimate_first(self, board):
+        board.put(move)
+        result = float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
+        board.rollback()
+        return result
 
     def smart_select(self, board):
         def estimate(move):
-            board.put(move)
-            result = float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
-            board.rollback()
+            result = self.estimate_first(board)
             return result if board.player == 1 else 1 - result
         return max(board.moves(), key=estimate)
     
@@ -32,10 +42,17 @@ class Bot:
         self.opt.zero_grad()
         def lf(x, y):
             return (x-y)**2
+
+        print('---------------', file=log)
+        for e in self.history:
+            print(f'win: {self.model(e.to_tensor())}', file=log)
+            print(e, file=log)
+        print(flush=True, file=log)
+
         mse = 0
         for i in range(len(self.history) - 1):
             w = self.discount_rate ** (len(self.history) - 1 - i)
-            mse += w * lf(self.model(self.history[i].to_tensor()), self.model(self.history[-1].to_tensor()))
+            mse += w * lf(self.estimate_first(self.history[i].to_tensor()), self.estimate_first(self.history[-1].to_tensor()))
         mse.backward()
         self.opt.step()
         self.success_story.append(complex_hash(self.model, 2))
@@ -47,13 +64,16 @@ class Bot:
             # self play, avoid duplicating turns in history
             pass
     
+    def clear_history(self):
+        self.history.clear()
+
     def make_move(self, board):
         self.remember_turn(board)
         self.study_last_turn()
         copy = deepcopy(board)
         if random() < self.random_rate:
             copy.put(self.rand_select(copy))
-            self.history.clear()
+            self.clear_history()
             self.remember_turn(copy)
         else:
             copy.put(self.smart_select(copy))
@@ -89,3 +109,6 @@ class Human:
             return copy
         except:
             return None
+
+    def clear_history():
+        print('Starting new game')
