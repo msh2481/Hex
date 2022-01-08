@@ -1,6 +1,7 @@
 from random import random, choice
 from stats import complex_hash
 from matplotlib import pyplot as plt
+from utils import log 
 
 class Bot:
     def __init__(n, m):
@@ -32,6 +33,13 @@ class Bot:
         self.opt.zero_grad()
         def lf(x, y):
             return (x-y)**2
+        
+        print('---------------', file=log)
+        for e in self.history:
+            print(f'win: {self.model(e.to_tensor())}', file=log)
+            print(e, file=log)
+        print(flush=True)
+
         mse = 0
         for i in range(len(self.history) - 1):
             w = self.discount_rate ** (len(self.history) - 1 - i)
