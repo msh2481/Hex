@@ -6,6 +6,7 @@ import torch
 from torch import nn
 import numpy as np
 from copy import deepcopy
+from board import Board 
 
 class Bot:
     def __init__(self, n, m):
