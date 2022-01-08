@@ -23,7 +23,10 @@ class Bot:
 
     def estimate_first(self, board):
         assert type(board) is Board
-        return float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
+        if board.winner():
+            return torch.tensor(board.winner() == 1, dtype=torch.float)
+        else:
+            return torch.sigmoid(self.model(board.to_tensor()))
 
     def smart_select(self, board):
         assert type(board) is Board
