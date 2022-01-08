@@ -43,7 +43,7 @@ class Bot:
         for e in self.history:
             print(f'win: {self.model(e.to_tensor())}', file=log)
             print(e, file=log)
-        print(flush=True)
+        print(flush=True, file=log)
 
         mse = 0
         for i in range(len(self.history) - 1):
