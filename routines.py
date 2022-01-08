@@ -1,3 +1,5 @@
+from board import Board
+
 def contest(first, second):
     board = Board(n, m)
     while not board.winner():
