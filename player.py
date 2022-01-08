@@ -21,11 +21,15 @@ class Bot:
             nn.Linear(4, 1))
         self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1)
 
+    def estimate_first(self, board):
+        board.put(move)
+        result = float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
+        board.rollback()
+        return result
+
     def smart_select(self, board):
         def estimate(move):
-            board.put(move)
-            result = float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
-            board.rollback()
+            result = self.estimate_first(board)
             return result if board.player == 1 else 1 - result
         return max(board.moves(), key=estimate)
     
@@ -48,7 +52,7 @@ class Bot:
         mse = 0
         for i in range(len(self.history) - 1):
             w = self.discount_rate ** (len(self.history) - 1 - i)
-            mse += w * lf(self.model(self.history[i].to_tensor()), self.model(self.history[-1].to_tensor()))
+            mse += w * lf(self.estimate_first(self.history[i].to_tensor()), self.estimate_first(self.history[-1].to_tensor()))
         mse.backward()
         self.opt.step()
         self.success_story.append(complex_hash(self.model, 2))
