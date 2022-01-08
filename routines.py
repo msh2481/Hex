@@ -1,10 +1,5 @@
-from board import Board
-from copy import deepcopy
-
-def contest(size, first, second):
-    board = Board(size, size)
-    first.clear_history()
-    second.clear_history()
+def contest(first, second):
+    board = Board(n, m)
     while not board.winner():
         player = first if board.player == 1 else second
         temp = player.make_move(board)
@@ -15,20 +10,20 @@ def contest(size, first, second):
             board.rollback()
     return board.winner()
 
-def tournament(size, first, second, n = 1000):
+def tournament(first, second, n = 1000):
     w = 0
     for game in range(n):
         if game % 2 == 0:
-            w += contest(size, first, second) == 1
+            w += contest(first, second) == 1
         else:
-            w += contest(size, second, first) == -1
+            w += contest(second, first) == -1
     return w / n
 
-def training_camp(size, model, n = 10):
+def training_camp(model, n = 10):
     old = deepcopy(model)
     model.learning = True
     for game in range(n):
-        contest(size, model, model)
+        contest(model, model)
     new = deepcopy(model)
     old.learning = False
     new.learning = False
