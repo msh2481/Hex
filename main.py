@@ -15,5 +15,5 @@ for i in range(10**9):
     print(f'i: {i}, train: {train}, win: {tournament(n, player, newbie, train)}', flush=True)
     save(player.model.state_dict(), f'zoo/{i}.pt')
     player.plot_success_story(f'plt/{i}.pdf')
-    player = training_camp(player, train)
+    player = training_camp(n, player, train)
     train = int(1.1 * train)
