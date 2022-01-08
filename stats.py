@@ -9,3 +9,7 @@ def eval_unity_root(poly, arg):
 def complex_hash(model, n):
     params = get_params(model)
     return np.abs(eval_unity_root(params, np.linspace(0, 2 * np.pi, num = n, endpoint = False)))
+
+def player_stats(player):
+    from positions import positions
+    return {name: player.estimate_first(board) for name, board in positions}

@@ -14,7 +14,7 @@ best = 1
 class Bot:
     def __init__(self, n, m):
         self.history = []
-        self.random_rate = 0.01
+        self.random_rate = 0.1
         self.discount_rate = 0.5
         self.learning = True
         self.success_story = []
@@ -22,7 +22,7 @@ class Bot:
             nn.Linear(n * m, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
-        self.opt = torch.optim.SGD(self.model.parameters(), lr=1e-4, momentum=0.9, weight_decay=1e-8)
+        self.opt = torch.optim.Adam(self.model.parameters(), lr=1, weight_decay=1e-8)
 
     def estimate_first(self, board):
         assert type(board) is Board
@@ -33,8 +33,8 @@ class Bot:
             result = torch.sigmoid(self.model(board.to_tensor()))
         if 0 < min(result, 1 - result) < best:
             best = min(result, 1 - result)
-            print(board)
-            print('est = ', result, flush=True)
+            # print(board)
+            # print('est = ', result, flush=True)
         return result
 
     def smart_select(self, board):
@@ -57,16 +57,16 @@ class Bot:
         def lf(x, y):
             return (x-y)**2
 
-        print('---------------', file=log)
-        for e in self.history:
-            print(f'win: {self.estimate_first(e).item()}', file=log)
-            print(e, file=log)
-        print(flush=True, file=log)
+        # print('---------------', file=log)
+        # for e in self.history:
+        #     print(f'win: {self.estimate_first(e).item()}', file=log)
+        #     print(e, file=log)
+        # print(flush=True, file=log)
 
-        mse = 0
-        for i in range(len(self.history) - 1):
-            w = self.discount_rate ** (len(self.history) - 1 - i)
-            mse += w * lf(self.estimate_first(self.history[i]), self.estimate_first(self.history[-1]))
+        mse = lf(self.estimate_first(self.history[-2]), self.estimate_first(self.history[-1]))
+        # for i in range(len(self.history) - 1):
+        #     w = self.discount_rate ** (len(self.history) - 1 - i)
+        #     mse += w * lf(self.estimate_first(self.history[i]), self.estimate_first(self.history[-1]))
         mse.backward()
         self.opt.step()
         self.success_story.append(complex_hash(self.model, 2))
