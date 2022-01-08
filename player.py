@@ -60,13 +60,16 @@ class Bot:
             # self play, avoid duplicating turns in history
             pass
     
+    def clear_history(self):
+        self.history.clear()
+
     def make_move(self, board):
         self.remember_turn(board)
         self.study_last_turn()
         copy = deepcopy(board)
         if random() < self.random_rate:
             copy.put(self.rand_select(copy))
-            self.history.clear()
+            self.clear_history()
             self.remember_turn(copy)
         else:
             copy.put(self.smart_select(copy))
@@ -102,3 +105,6 @@ class Human:
             return copy
         except:
             return None
+
+    def clear_history():
+        print('Starting new game')

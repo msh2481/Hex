@@ -3,6 +3,8 @@ from copy import deepcopy
 
 def contest(size, first, second):
     board = Board(size, size)
+    first.clear_history()
+    second.clear_history()
     while not board.winner():
         player = first if board.player == 1 else second
         temp = player.make_move(board)
