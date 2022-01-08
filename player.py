@@ -8,25 +8,34 @@ import numpy as np
 from copy import deepcopy
 from board import Board 
 
+
+best = 1
+
 class Bot:
     def __init__(self, n, m):
         self.history = []
-        self.random_rate = 0.1
-        self.discount_rate = 0.9
+        self.random_rate = 0.01
+        self.discount_rate = 0.5
         self.learning = True
         self.success_story = []
         self.model = nn.Sequential(
             nn.Linear(n * m, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
-        self.opt = torch.optim.SGD(self.model.parameters(), lr=1e-2, weight_decay=1e-8)
+        self.opt = torch.optim.SGD(self.model.parameters(), lr=1e-4, momentum=0.9, weight_decay=1e-8)
 
     def estimate_first(self, board):
         assert type(board) is Board
+        global best
         if board.winner():
-            return torch.tensor(board.winner() == 1, dtype=torch.float)
+            result = torch.tensor(board.winner() == 1, dtype=torch.float)
         else:
-            return torch.sigmoid(self.model(board.to_tensor()))
+            result = torch.sigmoid(self.model(board.to_tensor()))
+        if 0 < min(result, 1 - result) < best:
+            best = min(result, 1 - result)
+            print(board)
+            print('est = ', result, flush=True)
+        return result
 
     def smart_select(self, board):
         assert type(board) is Board
@@ -93,7 +102,7 @@ class Bot:
         arr = np.array(self.success_story)
         plt.cla()
         plt.clf()
-        plt.plot(arr[:, 0], arr[:, 1], 'o', ms=2)
+        plt.plot(arr[:, 0], arr[:, 1], 'o-', ms=2)
         if not f:
             plt.show()
         else:
