@@ -47,7 +47,7 @@ class Bot:
 
         print('---------------', file=log)
         for e in self.history:
-            print(f'win: {self.model(e.to_tensor())}', file=log)
+            print(f'win: {self.estimate_first(e).item()}', file=log)
             print(e, file=log)
         print(flush=True, file=log)
 
