@@ -29,6 +29,7 @@ class Bot:
         assert type(board) is Board
         def estimate(move):
             board.put(move)
+            assert type(board) is Board
             result = self.estimate_first(board)
             board.rollback()
             return result if board.player == 1 else 1 - result
