@@ -1,10 +1,11 @@
 from time import time
 
+log = open('log.txt', 'w')
+
 def git_save():
     from os import system as cmd
-    print(cmd('git switch autosave'))
-    print(cmd('git add .'))
-    print(cmd('git commit -m' + str(int(time()))))
-    print(cmd('git push'))
+    cmd('git switch autosave >git.txt')
+    cmd('git add . >git.txt'),
+    cmd('git commit -m' + str(int(time())) + '>git.txt')
+    cmd('git push >git.txt')
 
-log = open('log.txt', 'w')

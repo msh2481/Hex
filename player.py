@@ -19,17 +19,22 @@ class Bot:
             nn.Linear(n * m, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
-        self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1)
+        self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-1, weight_decay=1e-6)
 
     def estimate_first(self, board):
-        board.put(move)
-        result = float(board.winner() == 1) if board.winner() else torch.sigmoid(self.model(board.to_tensor()))
-        board.rollback()
-        return result
+        assert type(board) is Board
+        if board.winner():
+            return torch.tensor(board.winner() == 1, dtype=torch.float)
+        else:
+            return torch.sigmoid(self.model(board.to_tensor()))
 
     def smart_select(self, board):
+        assert type(board) is Board
         def estimate(move):
+            board.put(move)
+            assert type(board) is Board
             result = self.estimate_first(board)
+            board.rollback()
             return result if board.player == 1 else 1 - result
         return max(board.moves(), key=estimate)
     
@@ -45,14 +50,14 @@ class Bot:
 
         print('---------------', file=log)
         for e in self.history:
-            print(f'win: {self.model(e.to_tensor())}', file=log)
+            print(f'win: {self.estimate_first(e).item()}', file=log)
             print(e, file=log)
         print(flush=True, file=log)
 
         mse = 0
         for i in range(len(self.history) - 1):
             w = self.discount_rate ** (len(self.history) - 1 - i)
-            mse += w * lf(self.estimate_first(self.history[i].to_tensor()), self.estimate_first(self.history[-1].to_tensor()))
+            mse += w * lf(self.estimate_first(self.history[i]), self.estimate_first(self.history[-1]))
         mse.backward()
         self.opt.step()
         self.success_story.append(complex_hash(self.model, 2))
