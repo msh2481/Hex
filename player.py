@@ -19,18 +19,20 @@ class Bot:
         self.learning = True
         self.success_story = []
         self.model = nn.Sequential(
-            nn.Linear(2 * n * m + 2, 8), nn.ReLU(),
-            nn.Linear(8, 4), nn.ReLU(),
-            nn.Linear(4, 1))
-        self.opt = torch.optim.Adam(self.model.parameters(), lr=1, weight_decay=1e-8)
+            nn.Linear(2 * n * m + 2, 128), nn.ReLU(),
+            nn.Linear(128, 64), nn.ReLU(),
+            nn.Linear(64, 1))
+        self.opt = torch.optim.Adam(self.model.parameters(), lr=1e-2, weight_decay=1e-8)
 
     def estimate_first(self, board):
         assert type(board) is Board
         global best
         if board.winner():
-            result = torch.tensor(board.winner() == 1, dtype=torch.float)
+            inf = 1e3
+            result = torch.tensor(inf if board.winner() == 1 else -inf, dtype=torch.float)
         else:
-            result = torch.sigmoid(self.model(board.to_tensor()))
+            # result = torch.sigmoid(self.model(board.to_tensor()))
+            result = self.model(board.to_tensor())
         if 0 < min(result, 1 - result) < best:
             best = min(result, 1 - result)
             # print(board)

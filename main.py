@@ -9,7 +9,7 @@ n = 5
 
 newbie = Bot(n, n)
 player = Bot(n, n)
-train = 10
+train = 1
 print('newbie', player_stats(newbie))
 
 for i in range(10**9):
@@ -19,4 +19,4 @@ for i in range(10**9):
     save(player.model.state_dict(), f'zoo/{i}.pt')
     player.plot_success_story(f'plt/{i}.pdf')
     player = training_camp(n, player, train)
-    train = int(1.1 * train)
+    train = int(1.1 * train) + 1
