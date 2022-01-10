@@ -116,7 +116,9 @@ class Board:
         return moves
     
     def to_tensor(self):
-        return torch.tensor(self.__pole[: self.n * self.m], dtype=torch.float)
+        a = self.__pole[: self.n * self.m]
+        turns = sum([x != 0 for x in a])
+        return torch.tensor([x == 1 for x in a] + [x == -1 for x in a] + [turns, turns % 2], dtype=torch.float)
     
     def debug(self):
         print('udlr', *[self.__dsu[i] for i in [self.__up, self.__down, self.__left, self.__right]])

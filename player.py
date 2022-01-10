@@ -19,7 +19,7 @@ class Bot:
         self.learning = True
         self.success_story = []
         self.model = nn.Sequential(
-            nn.Linear(n * m, 8), nn.ReLU(),
+            nn.Linear(2 * n * m + 2, 8), nn.ReLU(),
             nn.Linear(8, 4), nn.ReLU(),
             nn.Linear(4, 1))
         self.opt = torch.optim.Adam(self.model.parameters(), lr=1, weight_decay=1e-8)
