@@ -13,7 +13,7 @@ train = 10
 print('newbie', player_stats(newbie))
 
 for i in range(10**9):
-    git_save()
+    # git_save()
     print(f'i: {i}, train: {train}, win: {tournament(n, player, newbie, train)}', flush=True)
     print(player_stats(player))
     save(player.model.state_dict(), f'zoo/{i}.pt')
