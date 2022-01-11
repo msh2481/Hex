@@ -98,21 +98,21 @@ class Bot:
         return copy
     
     def plot_success_story(self, f=None):
-        print(f'story len is {len(self.success_story)}')
+        # print(f'story len is {len(self.success_story)}')
         if not self.success_story:
             return
         arr = np.array(self.success_story)
         plt.cla()
         plt.clf()
         plt.plot(arr[:, 0], arr[:, 1], 'o-', ms=2)
-        if not f:
-            plt.show()
-        else:
-            plt.savefig(f)
-            file = open(f[:-3] + 'txt', 'w')
-            for e in self.success_story:
-                print(e, file=file)
-            file.close()
+        # if not f:
+        #     plt.show()
+        # else:
+        #     plt.savefig(f)
+        #     file = open(f[:-3] + 'txt', 'w')
+        #     for e in self.success_story:
+        #         print(e, file=file)
+        #     file.close()
 
 class Human:
     def make_move(self, board):
