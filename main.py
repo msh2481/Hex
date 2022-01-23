@@ -1,29 +1,42 @@
-from board import Turn, Board
-from player import Bot, Human
-from routines import tournament, training_camp 
-from utils import git_save
-from torch import save, load
-from stats import player_stats
-from matplotlib import pyplot as plt
-import wandb
-wandb.init(project="hex-ai")
+from board import HexBoard, HexEnv
+import tianshou as ts
+from torch import nn
+import torch
+import numpy as np
 
-n = 5
 
-newbie = Bot(n, n)
-player = Bot(n, n)
-train = 1
-print('newbie', player_stats(newbie))
+class Net(nn.Module):
+    def __init__(self, state_shape, action_shape):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(np.prod(state_shape), 128), nn.ReLU(inplace=True),
+            nn.Linear(128, 128), nn.ReLU(inplace=True),
+            nn.Linear(128, 128), nn.ReLU(inplace=True),
+            nn.Linear(128, np.prod(action_shape)),
+        )
+    def forward(self, obs, state=None, info={}):
+        if not isinstance(obs, torch.Tensor):
+            obs = torch.tensor(obs, dtype=torch.float)
+        batch = obs.shape[0]
+        logits = self.model(obs.view(batch, -1))
+        return logits, state
 
-for i in range(10**9):
-    # git_save()
-    player = training_camp(n, player, train)
-    train = int(1.1 * train) + 1
-    print(player_stats(player))
-    save(player.model.state_dict(), f'zoo/{i}.pt')
-    player.plot_success_story()
-    wandb.log({
-        'train_steps': train,
-        'win_rate': tournament(n, player, newbie, train),
-        'chart': plt
-    })
+env = HexEnv(3, 2)
+train_envs = ts.env.DummyVectorEnv([lambda: HexEnv(3, 2)])
+test_envs = ts.env.DummyVectorEnv([lambda: HexEnv(3, 2)])
+state_shape = env.observation_space.shape or env.observation_space.n
+action_shape = env.action_space.shape or env.action_space.n
+net = Net(state_shape, action_shape)
+optim = torch.optim.Adam(net.parameters())
+policy = ts.policy.DQNPolicy(net, optim, discount_factor=0.9, estimation_step=3, target_update_freq=320)
+train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(20000, 10), exploration_noise=True)
+test_collector = ts.data.Collector(policy, test_envs, exploration_noise=True)
+
+result = ts.trainer.offpolicy_trainer(
+    policy, train_collector, test_collector,
+    max_epoch=10, step_per_epoch=10000, step_per_collect=10,
+    update_per_step=0.1, episode_per_test=100, batch_size=64,
+    train_fn=lambda epoch, env_step: policy.set_eps(0.1),
+    test_fn=lambda epoch, env_step: policy.set_eps(0.05),
+    stop_fn=lambda mean_rewards: mean_rewards >= 0)
+print(f'Finished training! Use {result["duration"]}')
