@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from math import prod 
 
 class HexBoard:
     def __init__(self, n, frame):
@@ -42,7 +43,7 @@ class HexBoard:
 
     def __str__(self, d=2, axes=True):
         from itertools import product
-        tokens = {None: ' ', 0: '_', 1: '@', -1: 'X'}
+        tokens = {None: ' ', 0: '.', 1: 'O', -1: '+'}
         ivec, jvec = np.array([(d*3**0.5+1)//2, (d+1)//2], dtype=int), np.array([0, d//1], dtype=int)
         h, w = (ivec + jvec) * (self.s - 1) + 1
         res = [[tokens[None] for j in range(w)] for i in range(h)]
@@ -88,13 +89,6 @@ class HexBoard:
             self.bfs(self.right, -1)
         ]).astype(np.float32)
 
-def to_str(tensor):
-    from copy import deepcopy
-    a = deepcopy(tensor).astype(str)
-    a[a == 'False'] = '_'
-    a[a == 'True'] = '#'
-    return a
-
 import gym
 from gym import spaces
 
@@ -105,30 +99,33 @@ class HexEnv(gym.Env):
         self.n = n
         self.frame = frame
         self.s = self.n + 2 * self.frame
-        self.action_space = spaces.MultiDiscrete([self.n, self.n], dtype=np.int32)
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(6, self.s, self.s), dtype=np.float32)
+        self.action_space = spaces.Discrete(self.n * self.n)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(294,), dtype=np.float32)
         self.board = HexBoard(self.n, self.frame)
-    def step(self, action):
-        print(type(action), action)
-        assert type(action) is np.ndarray
-        assert action.shape == (2,)
-        assert action.dtype == np.int32
+    def _get_obs(self):
+        return self.board.to_tensors().reshape(1, -1)
+    def step_helper(self, action):
+        # print('got', type(action), action.shape, action.dtype, action)
+        i, j = np.unravel_index(action, (self.n, self.n))
         done = False
         reward = -1
         info = {}
-        if not self.board.get(*action):
-            self.board.put(*action)
+        if not self.board.get(i, j):
+            self.board.put(i, j)
             w = self.board.win()
             done = w != 0
             reward = w
-        return self.board.to_tensors(), reward, done, info
+        return self._get_obs(), reward, done, info
+    def step(self, action):
+        obs, reward, done, info = self.step_helper(action)
+        return (obs, reward, done, info) if done else self.step_helper(action)
     def reset(self):
         self.board = HexBoard(self.n, self.frame)
-        return self.board.to_tensors()
+        return self._get_obs()
     def render(self, mode='console'):
         if mode != 'console':
             raise NotImplementedError()
-        print(self.bord)
+        print(self.board)
     def close(self):
         pass
     def seed(self, seed):
