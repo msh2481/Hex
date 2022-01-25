@@ -99,11 +99,11 @@ class HexEnv(gym.Env):
         self.n = n
         self.frame = frame
         self.s = self.n + 2 * self.frame
-        self.action_space = spaces.Discrete(self.n * self.n)
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(294,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(self.n, self.n),)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(6, 7, 7), dtype=np.float32)
         self.board = HexBoard(self.n, self.frame)
     def _get_obs(self):
-        return self.board.to_tensors().reshape(1, -1)
+        return self.board.to_tensors().reshape((1,) + self.observation_space.shape)
     def step_helper(self, action):
         # print('got', type(action), action.shape, action.dtype, action)
         i, j = np.unravel_index(action, (self.n, self.n))

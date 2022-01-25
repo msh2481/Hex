@@ -24,23 +24,28 @@ from tianshou.data.batch import _alloc_by_keys_diff
 from tianshou.env import BaseVectorEnv, DummyVectorEnv
 from tianshou.policy import BasePolicy
 
-# class Net(nn.Module):
-#     def __init__(self, state_shape, action_shape):
-#         super().__init__()
-#         self.model = nn.Sequential(
-#             nn.Linear(np.prod(state_shape), 128), nn.ReLU(inplace=True),
-#             nn.Linear(128, 128), nn.ReLU(inplace=True),
-#             nn.Linear(128, 128), nn.ReLU(inplace=True),
-#             nn.Linear(128, np.prod(action_shape)),
-#         )
-#     def forward(self, obs, state=None, info={}):
-#         if not isinstance(obs, torch.Tensor):
-#             obs = torch.tensor(obs, dtype=torch.float)
-#         batch = obs.shape[0]
-#         logits = self.model(obs.view(batch, -1))
-#         print(logits.shape)
-#         assert logits.shape[1:] == (3, 3)
-#         return logits, state
+class Net(nn.Module):
+    def conv(self, n_in, n_out):
+        return nn.Conv2d(in_channels=n_in, out_channels=n_out, kernel_size=(3, 3))
+    def __init__(self, state_shape, action_shape):
+        super().__init__()
+        self.state_shape = state_shape
+        self.action_shape = action_shape
+        
+        self.model = nn.Sequential(
+            self.conv(6, 8), nn.ReLU(inplace=True),
+            self.conv(8, 16), nn.ReLU(inplace=True),
+            self.conv(16, 64), nn.ReLU(inplace=True),
+            nn.Flatten(), nn.Linear(64, 64), nn.ReLU(inplace=True),
+            nn.Linear(64, np.prod(action_shape))
+        )
+    def forward(self, obs, state=None, info={}):
+        if not isinstance(obs, torch.Tensor):
+            obs = torch.tensor(obs, dtype=torch.float)
+        batch = obs.shape[0]
+        obs = obs.view((batch,) + self.state_shape)
+        logits = self.model(obs)
+        return logits, state
 
 example_env = HexEnv(3, 2)
 train_envs = ts.env.DummyVectorEnv([lambda: HexEnv(3, 2)])
@@ -48,11 +53,7 @@ test_envs = ts.env.DummyVectorEnv([lambda: HexEnv(3, 2)])
 state_shape = example_env.observation_space.shape or example_env.observation_space.n
 action_shape = example_env.action_space.shape or example_env.action_space.n
 # print('shapes', state_shape, action_shape)
-net =  Net(
-        state_shape,
-        action_shape,
-        hidden_sizes=[128, 128],
-        )
+net = Net(state_shape, action_shape)
     
 optim = torch.optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optim, discount_factor=0.9, estimation_step=3, target_update_freq=320)
@@ -61,7 +62,7 @@ test_collector = ts.data.Collector(policy, test_envs, exploration_noise=True)
 
 result = ts.trainer.offpolicy_trainer(
     policy, train_collector, test_collector,
-    max_epoch=10, step_per_epoch=10, step_per_collect=10,
+    max_epoch=10, step_per_epoch=100, step_per_collect=10,
     update_per_step=0.1, episode_per_test=10, batch_size=64,
     train_fn=lambda epoch, env_step: policy.set_eps(0.1),
     test_fn=lambda epoch, env_step: policy.set_eps(0.05),
